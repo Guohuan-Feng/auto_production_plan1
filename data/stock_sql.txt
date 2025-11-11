@@ -1,0 +1,6 @@
+select sum(VERME) as STOCK
+from MARD_DALI_BBM.LQUA_POE
+where WERKS = '05C0'
+and matnr = '04420050962Y8'
+and bestq != 'S'
+group by matnr

@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment  
+metadata:  
+  name: rbcw-e2e-agents
+  namespace: rbcw-e2e-agents
+spec:  
+  replicas: 1
+  selector:  
+    matchLabels:  
+      app: rbcw-e2e-agents
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5 
+  template:  
+    metadata:  
+      labels:  
+        app: rbcw-e2e-agents
+    spec:  
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:  
+      - name: rbcw-e2e-agents
+        image: crxchinacdhprod.azurecr.cn/rbcw-e2e-agents:preview
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 500m
+            memory: 500Mi
+          limits:
+            cpu: 1000m 
+        env:  
+        - name: WORK_COUNT  
+          value: "1"  
+        - name: SERVICE_PORT  
+          value: "4000"
+        command: ["bash", "start.sh"]
+
+---
+apiVersion: v1  
+kind: Service  
+metadata:  
+  name: rbcw-e2e-agents
+  namespace: rbcw-e2e-agents
+spec:  
+  selector:  
+    app: rbcw-e2e-agents
+  ports:  
+    - name: https
+      port: 80
+      targetPort: 4000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rbcw-e2e-agents-ingress
+  namespace: rbcw-e2e-agents
+  annotations:
+    appgw.ingress.kubernetes.io/override-frontend-port: "4000"
+    appgw.ingress.kubernetes.io/health-probe-path: ""
+    appgw.ingress.kubernetes.io/proxy-connect-timeout: "120"
+    appgw.ingress.kubernetes.io/proxy-send-timeout: "120"
+    appgw.ingress.kubernetes.io/proxy-read-timeout: "120"
+    appgw.ingress.kubernetes.io/request-timeout: "120"
+spec:
+  ingressClassName: azure-application-gateway
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rbcw-e2e-agents
+                port:
+                  number: 4000

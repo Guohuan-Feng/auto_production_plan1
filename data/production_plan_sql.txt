@@ -1,0 +1,7 @@
+select matnr, PSTTR, GSMNG
+from MARD_DALI_BBM.PLAF_POE
+where PLWRK = '05C0'
+and dispo = '6QU'
+and matnr = '04420050962Y8'
+order by psttr asc
+fetch first 14 rows only
